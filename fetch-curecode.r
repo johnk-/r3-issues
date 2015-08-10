@@ -15,13 +15,7 @@ latin1-to-utf8: func [
 ] [
     to-binary collect [
         foreach b bin [
-            case [
-                b < 128 [keep b]
-                true [
-                    keep b and 1984 / 64 + 192
-                    keep b and 63 + 128
-                ]
-            ]
+            keep to-char b
         ]
     ]
 ]
