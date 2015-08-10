@@ -6,7 +6,7 @@ api-url: http://curecode.org/rebol3/api.rsp?
 
 fail: func [msg] [
     print msg
-    quit/now/return 1
+    quit/return 1
 ]
 
 latin1-to-utf8: func [
