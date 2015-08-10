@@ -61,29 +61,31 @@ main: funct [/local ticket-num ticket-date] [
         ;; an issue, do that in batches (range=<start>x<end>) instead of
         ;; loading all changes at once.
         reverse collect [
-            unless parse api-load "type=list&filter=6&mode=brief" [
-                'ok into [
-                    any [
-                        into [
-                            set ticket-num integer!
-                            4 skip
-                            set ticket-date date!
-                            5 skip
-                            (
-                                either any [
-                                    none? local-date
-                                    local-date < ticket-date
-                                ] [
-                                    keep ticket-num
-                                ] [
-                                    ;; We assume the list of changes returned
-                                    ;; by filter=6 is sorted reverse
-                                    ;; chronologically. So we abort as soon
-                                    ;; as we see a change older than what we
-                                    ;; already have.
-                                    break/return true
-                                ]
-                            )
+            unless catch [
+                parse api-load "type=list&filter=6&mode=brief" [
+                    'ok into [
+                        any [
+                            into [
+                                set ticket-num integer!
+                                4 skip
+                                set ticket-date date!
+                                5 skip
+                                (
+                                    either any [
+                                        none? local-date
+                                        local-date < ticket-date
+                                    ] [
+                                        keep ticket-num
+                                    ] [
+                                        ;; We assume the list of changes
+                                        ;; returned by filter=6 is sorted
+                                        ;; reverse chronologically. So we abort
+                                        ;; as soon as we see a change older
+                                        ;; than what we already have.
+                                        throw true
+                                    ]
+                                )
+                            ]
                         ]
                     ]
                 ]
