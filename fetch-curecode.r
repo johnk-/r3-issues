@@ -52,7 +52,7 @@ main: funct [/local ticket-num ticket-date] [
         fail "Could not load most recent change."
     ]
 
-    changes: either local-date >= remote-date [
+    changes: either attempt [ local-date >= remote-date ] [
         ;; Local timestamp is equal/newer than most recent remote. No changes
         ;; to fetch.
         []
