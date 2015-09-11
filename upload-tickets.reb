@@ -3,7 +3,6 @@ REBOL [
     author: "John Kenyon"
     date: 2015-08-21
     needs: [
-        http://reb4.me/r3/altwebform
         http://reb4.me/r3/altjson
         http://reb4.me/r3/form-date
     ]
