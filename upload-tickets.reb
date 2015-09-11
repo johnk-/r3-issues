@@ -84,7 +84,6 @@ for current-ticket start-ticket (start-ticket + number-to-upload - 1) 1 [
         print "Inserting dummy issue"
         description: ticket/description
     ] [
-        ; If we see code then set rest of the comment to fixed width
         show-code ticket/created ticket/description
         description: rejoin [
             "_Submitted by:_ " md-tx ticket/created "**" "*" ticket/user
