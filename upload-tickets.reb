@@ -127,6 +127,16 @@ for current-ticket start-ticket (start-ticket + number-to-upload - 1) 1 [
         ]
     ]
 
+    ;Capture ladislav's test written comments into a label
+    foreach cmt ticket/comments [
+        parse cmt/4 [
+            thru ["added"|"in the"]
+            thru "test"
+            thru "suite"
+            to end
+            (append labels "Test.written") ]
+    ]
+
     new-issue: copy []
     new-issue: compose/deep [
         <issue> [
