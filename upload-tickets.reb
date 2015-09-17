@@ -1,7 +1,7 @@
 REBOL [
     title: "CureCode Uploader"
     author: "John Kenyon"
-    date: 2015-08-21
+    date: 21-08-2015
     needs: [
         http://reb4.me/r3/altjson
         http://reb4.me/r3/form-date
@@ -62,8 +62,8 @@ show-code: func [ date text /local mark] [
         any [
             mark:
             some [ "**" | ">>" | "=="]
-            (insert mark md-tx date "^/```rebol^/" "<pre>") :mark
-            (append mark md-tx date "^/```" "</pre>") break
+            (insert mark md-tx date "^/```rebol^/" "bc.. ") :mark
+            (append mark md-tx date "^/```" "p. ") break
             | skip
         ]
     ]
@@ -92,9 +92,9 @@ for current-ticket start-ticket (start-ticket + number-to-upload - 1) 1 [
                 "" 
             ] [
                 rejoin [
-                    md-tx ticket/created join "```rebol" newline "<pre>" 
-                    replace/all ticket/code "*" md-tx ticket/created "*" "%2A" 
-                    md-tx ticket/created join "^/```" newline "</pre>"
+                    md-tx ticket/created join "```rebol" newline "bc.." 
+                    ticket/code
+                    md-tx ticket/created join "^/```" newline "p. "
                 ]
             ] newline
             "<sup>**CC - Data** [ Version: " ticket/version
@@ -159,12 +159,11 @@ for current-ticket start-ticket (start-ticket + number-to-upload - 1) 1 [
             ])
         ]
     ]
-
     print to-json new-issue
 
     ; Create the ticket - check the number allocated and abort if it is not expected
     upload-ticket github-config to-json new-issue
-    wait 0:00:01 ; allow the ticket to be created
+    wait 0:00:03 ; allow the ticket to be created
 
     if error? try [ to-string read rejoin [ github-config/issue-url "/" current-ticket ] ] [
         print "Ticket not created - emergency stop"
