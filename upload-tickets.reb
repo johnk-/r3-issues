@@ -56,19 +56,23 @@ upload-ticket: func [config issue /local label-data] [
 ; Helper function to insert either markdown or textile markup
 md-tx: func [ date md tx ] [ either date > 2009/04/20/19:00:00+0:00 [ md ] [ tx ] ]
 
-show-code: func [ date text /local mark] [
+markup-code: func [ date text /local upper-case other-char comment-rule code-rule before-code after-code sk t] [
     ; If we see code then set rest of the comment to fixed width
-    parse text [
-        any [
-            mark:
-            some [ "**" | ">>" | "=="]
-            (insert mark md-tx date "^/```rebol^/" "bc.. ") :mark
-            (append mark md-tx date "^/```" "p. ") break
-            | skip
+    upper-case: charset [ #"A" - #"Z" ]
+    other-char: complement charset [ #"A" - #"Z" "^/" " " "^M" ]
+    comment-rule: [ any space upper-case [ thru newline | to end ] ]
+    code-rule: [ any space other-char [ thru newline | to end ] ]
+    parse/case text [
+        some [
+            before-code: some [ code-rule ] 
+                (insert before-code (sk: length? t: md-tx date "^/```rebol^/" "^/bc.. " t)) sk skip after-code:
+                (insert after-code md-tx date "^/``` ^/" "^/^/p. ^/") 5 skip
+            | [ thru newline | to end ]
         ]
     ]
     text
 ]
+;print markup-code now/date {crash on invalid data:^/^/>> decompress #{AAAAAAAAAAAAAAAAAAAA}^/crash^/^/} quit
 
 print "Start uploading from?:"
 start-ticket: to-integer input
@@ -83,7 +87,7 @@ for current-ticket start-ticket (start-ticket + number-to-upload - 1) 1 [
         print "Inserting dummy issue"
         description: ticket/description
     ] [
-        show-code ticket/created ticket/description
+        markup-code ticket/created ticket/description
         description: rejoin [
             "_Submitted by:_ " md-tx ticket/created "**" "*" ticket/user
             md-tx ticket/created "**" "*" newline newline
@@ -92,9 +96,9 @@ for current-ticket start-ticket (start-ticket + number-to-upload - 1) 1 [
                 "" 
             ] [
                 rejoin [
-                    md-tx ticket/created join "```rebol" newline "bc.." 
+                    md-tx ticket/created "```rebol^/" "bc.. ^/" 
                     ticket/code
-                    md-tx ticket/created join "^/```" newline "p. "
+                    md-tx ticket/created "^/```^/" "^/^/p. ^/"
                 ]
             ] newline
             "<sup>**CC - Data** [ Version: " ticket/version
@@ -153,7 +157,7 @@ for current-ticket start-ticket (start-ticket + number-to-upload - 1) 1 [
                     <body> (rejoin[
                         "_Submitted by:_ " md-tx cmt/3 "**" "*"  
                         cmt/2 md-tx cmt/3 "**" "*" newline newline
-                        show-code cmt/3 cmt/4 newline
+                        markup-code cmt/3 cmt/4 newline
                     ])
                 ]
             ])
@@ -163,12 +167,12 @@ for current-ticket start-ticket (start-ticket + number-to-upload - 1) 1 [
 
     ; Create the ticket - check the number allocated and abort if it is not expected
     upload-ticket github-config to-json new-issue
-    wait 0:00:03 ; allow the ticket to be created
+    wait 0:00:04 ; allow the ticket to be created
 
     if error? try [ to-string read rejoin [ github-config/issue-url "/" current-ticket ] ] [
         print "Ticket not created - emergency stop"
         ;probe mold err
-        halt
+        ;halt
     ]
 
     print [ "Done with ticket:" current-ticket ]
