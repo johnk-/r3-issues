@@ -171,8 +171,8 @@ for current-ticket start-ticket (start-ticket + number-to-upload - 1) 1 [
 
     if error? try [ to-string read rejoin [ github-config/issue-url "/" current-ticket ] ] [
         print "Ticket not created - emergency stop"
-        ;probe mold err
-        ;halt
+        probe mold err
+        halt
     ]
 
     print [ "Done with ticket:" current-ticket ]
