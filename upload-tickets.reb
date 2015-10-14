@@ -10,9 +10,10 @@ REBOL [
 
 db-base: %tickets/
 
-github-config: context [ 
-    issue-api-url: https://api.github.com/repos/johnk-/impexptest/import/issues
-    issue-url: https://github.com/johnk-/impexptest/issues
+github-config: context [
+https://github.com/rebolbot/rebol-issues
+    issue-api-url: https://api.github.com/repos/rebolbot/rebol-issues/import/issues
+    issue-url: https://github.com/rebolbot/rebol-issues/issues
     auth-token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 ]
 
@@ -56,23 +57,22 @@ upload-ticket: func [config issue /local label-data] [
 ; Helper function to insert either markdown or textile markup
 md-tx: func [ date md tx ] [ either date > 2009/04/20/19:00:00+0:00 [ md ] [ tx ] ]
 
-markup-code: func [ date text /local upper-case other-char comment-rule code-rule before-code after-code sk t] [
-    ; If we see code then set rest of the comment to fixed width
-    upper-case: charset [ #"A" - #"Z" ]
+markup-code: func [ date text /local other-char code-rule mark ] [
+    if not equal? last text newline [ append text newline ] ;simplifies parse rules
     other-char: complement charset [ #"A" - #"Z" "^/" " " "^M" ]
-    comment-rule: [ any space upper-case [ thru newline | to end ] ]
-    code-rule: [ any space other-char [ thru newline | to end ] ]
+    code-rule: [ any space other-char thru newline ]
     parse/case text [
         some [
-            before-code: some [ code-rule ] 
-                (insert before-code (sk: length? t: md-tx date "^/```rebol^/" "^/bc.. " t)) sk skip after-code:
-                (insert after-code md-tx date "^/``` ^/" "^/^/p. ^/") 5 skip
-            | [ thru newline | to end ]
+            mark: some code-rule
+            (mark: insert mark(md-tx date "^/```rebol^/" "^/bc.. ")) :mark
+            some code-rule
+            mark: (mark: insert mark md-tx date "```^/" "^/p. ^/") :mark
+            |
+            thru newline
         ]
     ]
     text
 ]
-;print markup-code now/date {crash on invalid data:^/^/>> decompress #{AAAAAAAAAAAAAAAAAAAA}^/crash^/^/} quit
 
 print "Start uploading from?:"
 start-ticket: to-integer input
@@ -172,7 +172,7 @@ for current-ticket start-ticket (start-ticket + number-to-upload - 1) 1 [
     if error? try [ to-string read rejoin [ github-config/issue-url "/" current-ticket ] ] [
         print "Ticket not created - emergency stop"
         ;probe mold err
-        halt
+        ;halt
     ]
 
     print [ "Done with ticket:" current-ticket ]
