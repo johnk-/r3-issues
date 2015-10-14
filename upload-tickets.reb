@@ -64,7 +64,7 @@ markup-code: func [ date text /local other-char code-rule mark ] [
     parse/case text [
         some [
             mark: some code-rule
-            (mark: insert mark(md-tx date "^/```rebol^/" "^/bc.. ")) :mark
+            (mark: insert mark (md-tx date "^/```rebol^/" "^/bc.. ")) :mark
             some code-rule
             mark: (mark: insert mark md-tx date "```^/" "^/p. ^/") :mark
             |
