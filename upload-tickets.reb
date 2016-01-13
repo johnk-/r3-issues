@@ -4,16 +4,15 @@ REBOL [
     date: 21-08-2015
     needs: [
         http://reb4.me/r3/altjson
-        http://reb4.me/r3/form-date
+        %form-date.r
     ]
 ]
 
 db-base: %tickets/
 
 github-config: context [
-https://github.com/rebolbot/rebol-issues
-    issue-api-url: https://api.github.com/repos/rebolbot/rebol-issues/import/issues
-    issue-url: https://github.com/rebolbot/rebol-issues/issues
+    issue-api-url: https://api.github.com/repos/rebol/rebol-issues/import/issues
+    issue-url: https://github.com/rebol/rebol-issues/issues
     auth-token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 ]
 
@@ -64,7 +63,7 @@ markup-code: func [ date text /local other-char code-rule mark ] [
     parse/case text [
         some [
             mark: some code-rule
-            (mark: insert mark (md-tx date "^/```rebol^/" "^/bc.. ")) :mark
+            (mark: insert mark(md-tx date "^/```rebol^/" "^/bc.. ")) :mark
             some code-rule
             mark: (mark: insert mark md-tx date "```^/" "^/p. ^/") :mark
             |
@@ -73,6 +72,7 @@ markup-code: func [ date text /local other-char code-rule mark ] [
     ]
     text
 ]
+;print markup-code now/date {crash on invalid data:^/^/>> decompress #{AAAAAAAAAAAAAAAAAAAA}^/crash^/^/all} quit
 
 print "Start uploading from?:"
 start-ticket: to-integer input
@@ -138,7 +138,8 @@ for current-ticket start-ticket (start-ticket + number-to-upload - 1) 1 [
             thru "test"
             thru "suite"
             to end
-            (append labels "Test.written") ]
+            (append labels "Test.written") 
+        ]
     ]
 
     new-issue: copy []
@@ -146,14 +147,14 @@ for current-ticket start-ticket (start-ticket + number-to-upload - 1) 1 [
         <issue> [
             <title> (ticket/summary)
             <body> (description)
-            <created_at> (form-date ticket/created "%c")
+            <created_at> (form-date/utc ticket/created "%c")
             <closed> (either any [ ticket/status = "dismissed" ticket/status = "complete" ] [ true ] [ false ])
             <labels> [ (labels) ]
         ]
         <comments> [
             (map-each [cmt] ticket/comments [
                 compose/deep [
-                    <created_at> (form-date cmt/3 "%c")
+                    <created_at> (form-date/utc cmt/3 "%c")
                     <body> (rejoin[
                         "_Submitted by:_ " md-tx cmt/3 "**" "*"  
                         cmt/2 md-tx cmt/3 "**" "*" newline newline
@@ -167,12 +168,14 @@ for current-ticket start-ticket (start-ticket + number-to-upload - 1) 1 [
 
     ; Create the ticket - check the number allocated and abort if it is not expected
     upload-ticket github-config to-json new-issue
-    wait 0:00:04 ; allow the ticket to be created
+    wait 0:00:01 ; allow the ticket to be created
 
     if error? try [ to-string read rejoin [ github-config/issue-url "/" current-ticket ] ] [
-        print "Ticket not created - emergency stop"
-        probe mold err
-        halt
+        wait 0:00:03
+        if error? try [ to-string read rejoin [ github-config/issue-url "/" current-ticket ] ] [
+            print "Ticket not created - emergency stop"
+            halt
+        ]
     ]
 
     print [ "Done with ticket:" current-ticket ]
